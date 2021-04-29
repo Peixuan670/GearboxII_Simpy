@@ -441,7 +441,8 @@ class Gearbox_II(HW_sim_object):
                 if deque_level_index == 0:
                     # deque from base level
                     print("[Gearbox II] Deque from base level")
-                    level_cur_fifo = self.levelsA[deque_level_index].cur_fifo
+                    level_cur_fifo = self.blevel.cur_fifo
+                    print("[Gearbox II debug] base level cur VC = {}, base level cur_fifo = {}".format(self.blevel.vc, self.blevel.cur_fifo))
                     self.find_earliest_fifo_pipe_req_arr_A[deque_level_index].put(level_cur_fifo)
                     dequed_fifo = yield self.find_earliest_fifo_pipe_dat_arr_A[deque_level_index].get()
                     if dequed_fifo == -1:
