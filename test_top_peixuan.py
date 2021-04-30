@@ -26,9 +26,9 @@ class Top_tb(HW_sim_object):
 
         self.bit_rates = [1 * 10**9, 1 * 10**9, 1 * 10**9, 1 * 10**9]
         #self.bit_rates = [1 * 10**8, 1 * 10**8, 1 * 10**8, 1 * 10**8]
-        self.weights = [1, 1, 1, 1]
+        self.weights = [1, 1, 0.1, 0.1]
         self.quantum = 64 # bytes
-        self.num_test_pkts = [5, 5, 5, 5]
+        self.num_test_pkts = [150, 150, 150, 150]
         #self.num_test_pkts = [15, 15, 15, 15]
 
         self.pkt_gen = list()

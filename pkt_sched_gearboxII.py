@@ -34,8 +34,8 @@ class Pkt_sched(HW_sim_object):
         fifo_num_list = [10, 10, 10]
         granularity_list = [1, 10, 100]
         fifo_size_list = [128, 128, 128]
-        pifo_size_list = [8, 8, 8]
-        pifo_thresh_list = [4, 4, 4]
+        pifo_size_list = [128, 128, 128]
+        pifo_thresh_list = [64, 64, 64]
 
         # instantiate the Base_Level object
         

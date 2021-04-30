@@ -539,28 +539,29 @@ class Gearbox_II(HW_sim_object):
         while (min_finish_time == 99999999): # TODO: find non-empty level until there is one non-empty level
             index = 0
             deque_level = 0
-            earliset_pkt = self.blevel.peek_earliest_pkt()
-            if earliset_pkt == 0:
-                print("No pkt in level {}".format(index))
+            earliest_pkt = self.blevel.peek_earliest_pkt()
+            if earliest_pkt == 0:
+                print("No pkt in level {}, pkt_cnt = {}".format(index, self.blevel.pkt_cnt))
             else:
-                earliest_pkt = self.blevel.peek_earliest_pkt()
-                if earliest_pkt == 0:
-                    print("No pkt in level {}".format(index + 1))
-                else:
-                    min_finish_time = earliest_pkt.get_finish_time(debug=False)
+                #earliest_pkt = self.blevel.peek_earliest_pkt()
+                #if earliest_pkt == 0:
+                #    print("No pkt in level {}, pkt_cnt = {}".format(index + 1))
+                #else:
+                min_finish_time = earliest_pkt.get_finish_time(debug=False)
             #index = index + 1
             while (index < self.level_num - 1):
                 print("[Gearbox II debug: ] Check earliest pkt in level {}".format(index))
                 earliest_pkt = self.levelsA[index].peek_earliest_pkt()
                 if earliest_pkt == 0:
-                    print("No pkt in level {}".format(index + 1))
+                    print("No pkt in level {}, pkt_cnt = {}, pifo_pkt_cnt = {}".format(index + 1, self.levelsA[index].pkt_cnt, self.levelsA[index].pifo.get_len()))
                 else:
                     level_min_ft = earliest_pkt.get_finish_time(debug=False)
                     if level_min_ft < min_finish_time:
                         min_finish_time = level_min_ft
-                        deque_level = index
+                        deque_level = index + 1
                 index = index + 1
         
+        print("[Gearbox II debug: ] Deque from level {}".format(deque_level))
         return deque_level
 
     

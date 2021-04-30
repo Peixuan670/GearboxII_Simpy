@@ -110,6 +110,7 @@ class PIFO(HW_sim_object):
             popped_data_valid = 0
             # wait to receive incoming data
             data = yield self.w_in_pipe.get()
+            print("[PIFO debug] pifo push data {}".format(data))
             # model write latency
             yield self.wait_sys_clks(self.write_latency)
             # first enque the item
@@ -128,6 +129,7 @@ class PIFO(HW_sim_object):
                 #else:
                     done = 1
                     self.w_out_pipe.put((done, popped_data, popped_data_valid)) # tuple
+            print("[PIFO debug] finished push, now pifo len =  {}".format(self.get_len()))
 
     def pop_sm(self):
         """
@@ -162,3 +164,12 @@ class PIFO(HW_sim_object):
             return self.items[len(self.items) - 1]
         else:
             return 0
+    
+    def get_len(self):
+        return len(self.items)
+    
+    def get_max_time(self):
+        if len(self.items) == 0:
+            return 9999999      # TODO: a large max time when empty
+        else:
+            return self.peek_tail().get_finish_time(debug = False)

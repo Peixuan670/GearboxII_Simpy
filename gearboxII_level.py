@@ -104,6 +104,7 @@ class GearboxII_level(HW_sim_object):
     
     def peek_earliest_pkt(self):
         top_pkt = self.pifo.peek_front()
+        print("[Gearbox II level debug] pifo size = {}".format(self.pifo.get_len()))
         return top_pkt
 
     
@@ -135,11 +136,13 @@ class GearboxII_level(HW_sim_object):
         while True:
             (pkt) = yield self.enq_pipe_cmd.get() 
             if not pkt == 0:
-                if pkt.get_finish_time(debug=False) < self.pifo_max_time:
+                #if pkt.get_finish_time(debug=False) < self.pifo_max_time:
+                if (pkt.get_finish_time(debug=False) < self.pifo.get_max_time()) or (self.pifo.get_len() < self.pifo_threshold):
                     # TODO enque PIFO
+                    print("[Gearbox II level debug] Enque pifo")
                     self.pifo_w_in_pipe.put(pkt)
                     (done, popped_pkt, popped_pkt_valid) = yield self.pifo_w_out_pipe.get()
-                    self.pifo_max_time = self.pifo.peek_tail().get_finish_time(debug=False) # update pifo_max_time
+                    #self.pifo_max_time = self.pifo.peek_tail().get_finish_time(debug=False) # update pifo_max_time
 
                     # recycle popped_pkt FIFO
                     if popped_pkt_valid == 1:
@@ -150,12 +153,13 @@ class GearboxII_level(HW_sim_object):
                     
                     self.enq_pipe_sts.put((0, 0))
                     self.pkt_cnt = self.pkt_cnt + 1 # update level pkt cnt
+                    print("[Gearbox II level debug] Enque pifo complete, now pifo len = {}, level pkt cnt = {}".format(self.pifo.get_len(), self.pkt_cnt))
                 else:
                     enque_fifo_index = self.get_enque_fifo(pkt.get_finish_time(debug=False))
                     # enque FIFO
                     self.fifo_w_in_pipe_arr[enque_fifo_index].put(pkt)
                     yield self.fifo_w_out_pipe_arr[enque_fifo_index].get()
-                    print("[Level] pkt {} enqued fifo {}".format(pkt.get_uid(), enque_fifo_index))
+                    print("[Level] pkt {} enqued fifo {} (not base level)".format(pkt.get_uid(), enque_fifo_index))
                     self.enq_pipe_sts.put((0, 0))
                     self.pkt_cnt = self.pkt_cnt + 1 # update level pkt cnt
             else:
@@ -167,11 +171,11 @@ class GearboxII_level(HW_sim_object):
         while True:
             (pkt) = yield self.mig_enq_pipe_cmd.get() 
             if not pkt == 0:
-                if pkt.get_finish_time(debug=False) < self.pifo_max_time:
+                if (pkt.get_finish_time(debug=False) < self.pifo.get_max_time()) or (self.pifo.get_len() < self.pifo_threshold):
                     # TODO enque PIFO
                     self.pifo_w_in_pipe.put(pkt)
                     (done, popped_pkt, popped_pkt_valid) = yield self.pifo_w_out_pipe.get()
-                    self.pifo_max_time = self.pifo.peek_tail().get_finish_time(debug=False) # update pifo_max_time
+                    #self.pifo_max_time = self.pifo.peek_tail().get_finish_time(debug=False) # update pifo_max_time
 
                     # recycle popped_pkt FIFO
                     if popped_pkt_valid == 1:
@@ -237,7 +241,9 @@ class GearboxII_level(HW_sim_object):
                     if_reload = 1
                     self.rld_pipe_cmd.put(1) # TODO Peixuan not sure if this works
                 self.deq_pipe_dat.put((dequed_pkt, if_reload))
+                print("[Gearbox II level debug] Deque pifo complete, before update, now pifo len = {}, level pkt cnt = {}".format(self.pifo.get_len(), self.pkt_cnt))
                 self.pkt_cnt = self.pkt_cnt - 1 # update level pkt cnt
+                print("[Gearbox II level debug] Deque pifo complete, now pifo len = {}, level pkt cnt = {}".format(self.pifo.get_len(), self.pkt_cnt))
     
     def migration_p(self):
         # migration process (deque FIFO)
@@ -271,16 +277,16 @@ class GearboxII_level(HW_sim_object):
 
             pkt_to_reload = self.fifos[index].get_len() # get current fifo size
             pkt_reloaded  = 0   # initialized as 0
-            if self.rld_pipe_dat is not None:
+            if self.rld_pipe_sts is not None:
                 while pkt_reloaded < pkt_to_reload:
                     pkt_reloaded = pkt_reloaded + 1
                     self.fifo_r_in_pipe_arr[index].put(1)
                     reload_pkt = yield self.fifo_r_out_pipe_arr[index].get()
 
                     # enque PIFO
-                    self.pifo_w_in_pipe.put(pkt)
+                    self.pifo_w_in_pipe.put(reload_pkt)
                     (done, popped_pkt, popped_pkt_valid) = yield self.pifo_w_out_pipe.get()
-                    self.pifo_max_time = self.pifo.peek_tail().get_finish_time(debug=False) # update pifo_max_time
+                    #self.pifo_max_time = self.pifo.peek_tail().get_finish_time(debug=False) # update pifo_max_time
 
                     # recycle popped_pkt FIFO
                     if popped_pkt_valid == 1:
